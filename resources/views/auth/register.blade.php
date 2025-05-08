@@ -13,7 +13,9 @@
         <div class="mt-4">
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            @if($errors->get('email'))
+                <x-input-error :messages="['Ця пошта вже зареєстрована у системі!']" class="mt-2" />
+             @endif
         </div>
 
         <!-- Password -->
@@ -25,7 +27,13 @@
                             name="password"
                             required autocomplete="new-password" />
 
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            @if($errors->get('password'))
+                @if ($errors->get('password')[0] == 'The password field must be at least 8 characters.')
+                    <x-input-error :messages="['Пароль має мати як мінімум 8 символів!']" class="mt-2" />
+                @elseif($errors->get('password')[0] == 'The password field confirmation does not match.')
+                    <x-input-error :messages="['Поле паролю і підтвердження паролю не співпадають!']" class="mt-2" />
+                @endif
+            @endif
         </div>
 
         <!-- Confirm Password -->
