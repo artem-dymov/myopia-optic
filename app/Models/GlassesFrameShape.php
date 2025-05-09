@@ -1,11 +1,12 @@
 <?php
 
 namespace App\Models;
-
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class GlassesFrameShape extends Model
 {
+    use HasFactory;
     protected $table = 'glasses_frame_shapes';
 
     protected $fillable = [

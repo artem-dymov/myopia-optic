@@ -19,6 +19,7 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/glasses-selection', [GlassesSelectionController::class, 'index'])->name('glasses-selection.index');
+    Route::post('/glasses-selection', [GlassesSelectionController::class, 'selectGlasses'])->name('glasses-selection.select');
     Route::get('/info-page', [InfoPageController::class, 'index'])->name('info-page');
 });
 
