@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\GlassesFrame;
 use App\Models\GlassesFrameShape;
 use App\Models\Lens;
+use App\Models\FaceShape;
 use App\Models\Recommendation;
 use Illuminate\Http\Request;
 
@@ -47,9 +48,9 @@ class GlassesSelectionController extends Controller
         return view('glasses-selection', compact('lensTypes', 'faceShapes', 'frameStyles', 'placeholders'));
     }
 
+
     public function selectGlasses(Request $request)
     {
-        // 1. Отримання вхідних параметрів
         $validatedData = $request->validate([
             'right_eye_diopters' => 'required|numeric|min:-15|max:0',
             'left_eye_diopters' => 'required|numeric|min:-15|max:0',
@@ -60,94 +61,77 @@ class GlassesSelectionController extends Controller
             'blue_light_sensitivity' => 'required|boolean',
         ]);
 
-        $rightEyeDiopters = (float) $validatedData['right_eye_diopters'];
-        $leftEyeDiopters = (float) $validatedData['left_eye_diopters'];
-        $pupillaryDistance = (int) $validatedData['pupillary_distance'];
+        // Отримання даних
+        $rightEyeDiopters = (float)$validatedData['right_eye_diopters'];
+        $leftEyeDiopters = (float)$validatedData['left_eye_diopters'];
+        $pupillaryDistance = (int)$validatedData['pupillary_distance'];
         $faceShape = $validatedData['face_shape'];
         $lifestyle = $validatedData['lifestyle'];
         $preferredFrameMaterials = $validatedData['preferred_frame_materials'];
-        $blueLightSensitivity = (bool) $validatedData['blue_light_sensitivity'];
+        $blueLightSensitivity = (bool)$validatedData['blue_light_sensitivity'];
 
-        // 2. Розрахунок рекомендованого індексу заломлення
-        $maxDiopter = max(abs($rightEyeDiopters), abs($leftEyeDiopters));
+        // Розрахунок індексу заломлення
+        function calculateRefractiveIndex($leftDiopter, $rightDiopter, $nMin = 1.50, $nMax = 1.74, $dMax = 10.0) {
+            $D = max(abs($leftDiopter), abs($rightDiopter));
+            
+            if ($D >= $dMax) {
+                return $nMax;
+            }
 
-        $lensIndex = match (true) {
-            $maxDiopter <= 2.0 => 1.5,
-            $maxDiopter <= 4.0 => 1.6,
-            $maxDiopter <= 6.0 => 1.67,
-            default => 1.74,
-        };
+            // лінійна інтерполяція
+            $n = $nMin + ($nMax - $nMin) * ($D / $dMax);
+            return round($n, 2);
+        }
 
-        // 3. Визначення матеріалу лінз
+        $lensIndex = calculateRefractiveIndex($leftEyeDiopters, $rightEyeDiopters);
+
+        // Визначення матеріалу лінз
         $lensMaterial = ($lifestyle === 'active') ? 'polycarbonate' : 'plastic';
 
-        // 4. Визначення додаткових опцій
-        $uvProtection = true;
-        $blueLightFilter = $blueLightSensitivity;
-
-        // 5. Оцінка товщини лінз (приблизно)
-        $baseThickness = 1.0; // мм
-        $avgFrameSize = 50; // мм
-        $thicknessCoefficient = 1.5 / $lensIndex;
-        $lensThickness = $baseThickness + $maxDiopter * $thicknessCoefficient * ($avgFrameSize / 50);
-
-        // 6. Відбір оправ за формою обличчя
-        $suitableFrameShapes = GlassesFrameShape::whereJsonContains('suitable_face_shapes', $faceShape)->pluck('id');
-
-        // 7. Відбір оправ за матеріалом
-        $filteredFrames = GlassesFrame::whereIn('shape_id', $suitableFrameShapes)
-            ->whereIn('material', $preferredFrameMaterials)
-            ->get();
-
-        // 8. Відбір рекомендованих лінз
+        // Фільтрація лінз
         $filteredLenses = Lens::where('index', $lensIndex)
             ->where('material', $lensMaterial)
-            ->where('uv_protection', $uvProtection)
-            ->when($blueLightFilter, function ($query) {
-                return $query->where('blue_light_filter', true);
-            })
+            ->where('uv_protection', true)
+            ->when($blueLightSensitivity, fn($q) => $q->where('blue_light_filter', true))
+            ->limit(20)
             ->get();
 
-        // 9. Формування результатів
-        $recommendedLenses = $filteredLenses->map(function ($lens) use ($lensThickness) {
-            return [
-                'name' => $lens->name,
-                'index' => $lens->index,
-                'material' => $lens->material,
-                'uv_protection' => $lens->uv_protection,
-                'blue_light_filter' => $lens->blue_light_filter,
-                'estimated_thickness_mm' => round($lensThickness, 2),
-                'price' => $lens->price,
-            ];
+        // Фільтрація оправ
+        $suitableFrameShapes = GlassesFrameShape::whereJsonContains(
+                'suitable_face_shapes',
+                FaceShape::where('name', '=', $faceShape)->pluck('id')
+            )
+            ->pluck('id');
+
+        // Врахування міжзіничної відстані
+        $minBridgeWidth = $pupillaryDistance - 2;
+        $maxBridgeWidth = $pupillaryDistance + 2;
+
+        $filteredFrames = GlassesFrame::whereIn('shape_id', $suitableFrameShapes)
+            ->whereIn('material', $preferredFrameMaterials)
+            ->whereBetween('bridge_width', [$minBridgeWidth, $maxBridgeWidth])
+            ->limit(20)
+            ->get();
+
+        $filteredFrames->transform(function ($frame) {
+            $frame->shape_name = $frame->shape ? $frame->shape->name : 'Невідома форма';
+            return $frame;
         });
 
-        $recommendedFrames = $filteredFrames->map(function ($frame) {
-            return [
-                'name' => $frame->name,
-                'shape' => $frame->shape->name,
-                'material' => $frame->material,
-                'width' => $frame->width,
-                'bridge_width' => $frame->bridge_width,
-                'temple_length' => $frame->temple_length,
-                'color' => $frame->color,
-                'price' => $frame->price,
-            ];
-        });
-
-        // 10. Підготовка відповіді
-        $summary = sprintf(
-            "Рекомендовано лінзи з індексом заломлення %.2f, матеріал %s. Товщина лінз по краях приблизно %.2f мм. Підібрано оправи, сумісні з формою обличчя '%s' та вашими перевагами по матеріалу.",
-            $lensIndex,
-            $lensMaterial,
-            round($lensThickness, 2),
-            $faceShape
-        );
+        // Збереження рекомендації
+        Recommendation::create([
+            'user_id' => Auth::id(),
+            'input_parameters' => $validatedData,
+            'recommended_frames' => $filteredFrames,
+            'recommended_lenses' => $filteredLenses
+        ]);
 
         return response()->json([
-            'recommended_lenses' => $recommendedLenses,
-            'recommended_frames' => $recommendedFrames,
-            'summary' => $summary,
+            'recommended_lenses' => $filteredLenses,
+            'recommended_frames' => $filteredFrames,
+            'summary' => "Підбір успішний. Знайдено лінз: " . $filteredLenses->count() . ", оправ: " . $filteredFrames->count()
         ]);
     }
+
 
 }

@@ -15,11 +15,14 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         Головна
                     </x-nav-link>
-                    <x-nav-link :href="route('glasses-selection.index')">
+                    <x-nav-link :href="route('glasses-selection.index')" :active="request()->routeIs('glasses-selection.index')">
                         Підбір окулярів
                     </x-nav-link>
-                    <x-nav-link :href="route('info-page')">
+                    <x-nav-link :href="route('info-page')" :active="request()->routeIs('info-page')">
                         Довідка
+                    </x-nav-link>
+                    <x-nav-link :href="route('history')" :active="request()->routeIs('history')">
+                        Історія підбору
                     </x-nav-link>
                 </div>
             </div>
@@ -83,6 +86,9 @@
 
             <x-responsive-nav-link :href="route('info-page')" :active="request()->routeIs('info-page')">
                 Довідка
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('history')" :active="request()->routeIs('history')">
+                Історія підбору
             </x-responsive-nav-link>
         </div>
 

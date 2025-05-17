@@ -95,7 +95,6 @@
   <div class="container mx-auto px-4 md:px-6 py-8 max-w-4xl">
     <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-6">Підбір окулярів при міопії</h1>
-      
       <form id="glasses-selection-form" method="post" action="/submit-selection" class="space-y-8" novalidate>
         <!-- Медичні параметри -->
         <fieldset class="border border-gray-300 rounded-md p-4">
@@ -164,12 +163,10 @@
               <label for="lifestyle" class="block text-gray-700 font-medium mb-1">Стиль життя</label>
               <select 
                 id="lifestyle" name="lifestyle" required
-                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400"
-              >
+                class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400">
                 <option value="" disabled selected>-- Оберіть стиль --</option>
                 <option value="active">Активний</option>
                 <option value="sedentary">Пасивний</option>
-                <option value="mixed">Змішаний</option>
               </select>
             </div>
             
@@ -210,8 +207,7 @@
         <div class="pt-4">
           <button 
             type="submit" 
-            class="bg-gray-800 text-white px-6 py-3 rounded-md hover:bg-gray-900 transition-colors w-full md:w-auto"
-          >
+            class="bg-gray-800 text-white px-6 py-3 rounded-md hover:bg-gray-900 transition-colors w-full md:w-auto">
             Підібрати окуляри
           </button>
         </div>
@@ -219,7 +215,8 @@
     </div>
   </div>  
 
-  <div id="glasses-results" class="mt-8 p-4 border border-gray-300 rounded-md bg-gray-50 hidden"></div>
+  <div id="glasses-results-header" class="flex-auto text-center"></div>
+  <div id="glasses-results" class="flex flex-col lg:flex-row gap-6"></div>
 
   <script>
     $(document).ready(function() {
@@ -227,6 +224,7 @@
         e.preventDefault(); // Забороняємо стандартну відправку форми
     
         // Очистити і приховати блок результатів перед новим запитом
+        const results_header = $('#glasses-results-header');
         const $results = $('#glasses-results');
         $results.empty().hide();
     
@@ -242,28 +240,84 @@
           },
           success: function(response) {
             // Побудова HTML для виводу результатів
-            let html = `<h2 class="text-xl font-semibold mb-4">Результати підбору</h2>`;
-    
-            html += `<p class="mb-4 italic">${response.summary}</p>`;
+            let html_header = `<h2 class="text-xl font-semibold mb-4">Результати підбору</h2>`;
+            html_header += `<p class="mb-4 italic">${response.summary}</p>`;
+            results_header.html(html_header).fadeIn();
+
+            let html = '';
     
             // Лінзи
             if(response.recommended_lenses.length > 0) {
-              html += `<h3 class="font-semibold mb-2">Рекомендовані лінзи:</h3><ul class="list-disc list-inside mb-4">`;
-              response.recommended_lenses.forEach(lens => {
-                html += `<li><strong>${lens.name}</strong> - Індекс: ${lens.index}, Матеріал: ${lens.material}, Товщина: ${lens.estimated_thickness_mm} мм, Ціна: ${lens.price} грн</li>`;
-              });
-              html += `</ul>`;
+              html += `<div>
+                        <h3 class="font-semibold mb-2">Рекомендовані лінзи</h3>
+                          <div>
+                            <table class="border border-gray-300">
+                              <thead class="bg-gray-100">
+                                <tr>
+                                  <th class="border px-4 py-2 text-left">Назва</th>
+                                  <th class="border px-4 py-2 text-left">Бренд</th>
+                                  <th class="border px-4 py-2 text-left">Індекс</th>
+                                  <th class="border px-4 py-2 text-left">Матеріал</th>
+                                  <th class="border px-4 py-2 text-left">Ціна (грн)</th>
+                                </tr>
+                              </thead>
+                            <tbody id="lenses-table-body">`;
+
+                    response.recommended_lenses.forEach(lens => {
+                
+
+                        html += `<tr>
+                                  <td class="border px-4 py-2">${lens.name}</td>
+                                  <td class="border px-4 py-2">${lens.brand}</td>
+                                  <td class="border px-4 py-2">${lens.index}</td>
+                                  <td class="border px-4 py-2">${lens.material}</td>
+                                  <td class="border px-4 py-2">${lens.price}</td>
+                                </tr>`;
+                    });
+              html += `</thead>
+                                <tbody id="lenses-table-body"></tbody>
+                              </table>
+                            </div>
+                          </div>`;
             } else {
               html += `<p>Лінзи не знайдені за заданими параметрами.</p>`;
             }
     
             // Оправа
             if(response.recommended_frames.length > 0) {
-              html += `<h3 class="font-semibold mb-2">Рекомендовані оправи:</h3><ul class="list-disc list-inside">`;
+              html += `<div>
+                        <h3 class="font-semibold mb-2">Рекомендовані оправи</h3>
+                          <div>
+                            <table class="border border-gray-300">
+                              <thead class="bg-gray-100">
+                                <tr>
+                                  <th class="border px-4 py-2 text-left">Назва</th>
+                                  <th class="border px-4 py-2 text-left">Форма</th>
+                                  <th class="border px-4 py-2 text-left">Матеріал</th>
+                                  <th class="border px-4 py-2 text-left">Розміри (мм)</th>
+                                  <th class="border px-4 py-2 text-left">Колір</th>
+                                  <th class="border px-4 py-2 text-left">Ціна (грн)</th>
+                                </tr>
+                              </thead>
+                              <tbody id="frames-table-body">`;
+
               response.recommended_frames.forEach(frame => {
-                html += `<li><strong>${frame.name}</strong> (${frame.shape}) - Матеріал: ${frame.material}, Розміри (Ш×Місток×Дужки): ${frame.width}×${frame.bridge_width}×${frame.temple_length} мм, Колір: ${frame.color}, Ціна: ${frame.price} грн</li>`;
+                html += `
+                  <tr>
+                    <td class="border px-4 py-2">${frame.name}</td>
+                    <td class="border px-4 py-2">${frame.shape.name}</td>
+                    <td class="border px-4 py-2">${frame.material}</td>
+                    <td class="border px-4 py-2">${frame.width}×${frame.bridge_width}×${frame.temple_length}</td>
+                    <td class="border px-4 py-2">${frame.color}</td>
+                    <td class="border px-4 py-2">${frame.price}</td>
+                  </tr>`;
               });
-              html += `</ul>`;
+              html += `         </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      </div>`;
             } else {
               html += `<p>Оправа не знайдена за заданими параметрами.</p>`;
             }

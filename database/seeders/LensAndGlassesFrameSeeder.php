@@ -11,9 +11,9 @@ class LensAndGlassesFrameSeeder extends Seeder
     public function run()
     {
         // Генеруємо 10 лінз
-        Lens::factory()->count(200)->create();
+        Lens::factory()->count(3000)->create();
 
         // Генеруємо 10 оправ
-        GlassesFrame::factory()->count(200)->create();
+        GlassesFrame::factory()->count(3000)->create();
     }
 }

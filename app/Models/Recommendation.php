@@ -11,7 +11,7 @@ class Recommendation extends Model
     protected $table = 'recommendations';
 
     protected $fillable = [
-        'session_id',
+        'user_id',
         'input_parameters',
         'recommended_frames',
         'recommended_lenses',
@@ -23,3 +23,4 @@ class Recommendation extends Model
         'recommended_lenses' => 'array',
     ];
 }
+

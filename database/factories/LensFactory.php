@@ -10,12 +10,16 @@ class LensFactory extends Factory
 
     public function definition()
     {
-        $indices = [1.5, 1.6, 1.67, 1.74];
+
+        // Генеруємо назву з випадкової кількості слів від 1 до 4
+        $wordsCount = $this->faker->numberBetween(1, 4);
+        $name = ucfirst($this->faker->words($wordsCount, true)); // true - повертає рядок, не масив
+
         $materials = ['plastic', 'polycarbonate', 'trivex'];
         return [
-            'name' => 'Lens ' . $this->faker->unique()->word(),
+            'name' => 'Lens ' . $name,
             'brand' => $this->faker->company(),
-            'index' => $this->faker->randomElement($indices),
+            'index' => $this->faker->randomFloat(2, 1.5, 1.74),
             'material' => $this->faker->randomElement($materials),
             'uv_protection' => true,
             'blue_light_filter' => $this->faker->boolean(50),

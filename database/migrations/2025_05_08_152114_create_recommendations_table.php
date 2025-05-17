@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('recommendations', function (Blueprint $table) {
             $table->id();
-            $table->string('session_id')->nullable()->index();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->json('input_parameters')->nullable(); // збережені вхідні дані (без персональних даних)
             $table->json('recommended_frames')->nullable(); // масив з ID або описом оправ (glasses_frames)
             $table->json('recommended_lenses')->nullable(); // масив з ID або описом лінз

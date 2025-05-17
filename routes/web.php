@@ -4,7 +4,8 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GlassesSelectionController;
 use App\Http\Controllers\InfoPageController;
-
+use App\Http\Controllers\HistoryController;
+use Illuminate\Support\Facades\Auth;
 
 Route::get('/', function () {
     return view('dashboard');
@@ -21,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/glasses-selection', [GlassesSelectionController::class, 'index'])->name('glasses-selection.index');
     Route::post('/glasses-selection', [GlassesSelectionController::class, 'selectGlasses'])->name('glasses-selection.select');
     Route::get('/info-page', [InfoPageController::class, 'index'])->name('info-page');
+    Route::get('/history', [HistoryController::class, 'index'])->name('history');
 });
 
 require __DIR__.'/auth.php';

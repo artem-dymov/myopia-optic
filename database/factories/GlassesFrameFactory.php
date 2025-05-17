@@ -17,13 +17,17 @@ class GlassesFrameFactory extends Factory
         $materials = ['metal', 'plastic', 'titanium'];
         $colors = ['black', 'brown', 'silver', 'gold', 'blue', 'red'];
 
+        // Генеруємо назву з 1-4 слів (рядок)
+        $wordsCount = $this->faker->numberBetween(1, 4);
+        $name = 'Frame ' . ucfirst($this->faker->words($wordsCount, true));
+
         return [
-            'name' => 'Frame ' . $this->faker->unique()->word(),
+            'name' => $name,
             'brand' => $this->faker->company(),
             'shape_id' => $shapeId,
             'material' => $this->faker->randomElement($materials),
             'width' => $this->faker->numberBetween(120, 150),
-            'bridge_width' => $this->faker->numberBetween(14, 24),
+            'bridge_width' => $this->faker->numberBetween(50, 80),
             'temple_length' => $this->faker->numberBetween(135, 150),
             'lens_height' => $this->faker->numberBetween(30, 50),
             'color' => $this->faker->randomElement($colors),

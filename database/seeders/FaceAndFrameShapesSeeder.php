@@ -30,29 +30,28 @@ class FaceAndFrameShapesSeeder extends Seeder
             [
                 'name' => 'oval',
                 'description' => 'Овальна форма оправи',
-                'suitable_face_shapes' => json_encode([
+                'suitable_face_shapes' => [
                     $faceShapeIds['oval'] ?? null,
                     $faceShapeIds['round'] ?? null,
                     $faceShapeIds['square'] ?? null,
-                ]),
+                ],
             ],
             [
                 'name' => 'round',
                 'description' => 'Кругла форма оправи',
-                'suitable_face_shapes' => json_encode([
+                'suitable_face_shapes' => [
                     $faceShapeIds['square'] ?? null,
                     $faceShapeIds['diamond'] ?? null,
-                ]),
+                ],
             ],
             [
                 'name' => 'rectangular',
                 'description' => 'Прямокутна форма оправи',
-                'suitable_face_shapes' => json_encode([
+                'suitable_face_shapes' => [
                     $faceShapeIds['round'] ?? null,
                     $faceShapeIds['triangle'] ?? null,
-                ]),
+                ],
             ],
-            // Додайте інші форми за потребою
         ];
 
         foreach ($frameShapes as $fs) {
